@@ -96,13 +96,38 @@ print(coords)  # None
 - **Configurable Radius**: Bounding box calculations support custom radius in miles
 - **LLM Integration**: Can extract locations from natural language text using OpenAI models
 
-## Dependencies
+## Installation
 
-The modules require the following packages:
+Install via pip (from the project root):
 
-```bash
-pip install dateparser python-dateutil geopy langchain-openai langchain-core
+```sh
+pip install .
 ```
+
+For development/editable install:
+
+```sh
+pip install -e .
+```
+
+## Usage
+
+Import utilities in your agent project:
+
+```python
+from agent_core_utils.calendar_tools import get_current_date
+from agent_core_utils.location_tools import extract_location_with_llm
+```
+
+## Project Structure
+
+- `agent_core_utils/` — Main package directory
+- `tests/` — Unit tests
+
+## Requirements
+
+- Python 3.7+
+- See `pyproject.toml` for dependencies
 
 ## Testing
 
@@ -120,6 +145,14 @@ pytest tests/test_location_tools.py -v
 
 # Run with coverage
 pytest tests/ --cov=. --cov-report=html
+
+# Run only LLM-marked tests (requires env flag)
+export RUN_LLM_TESTS=1
+pytest -m llm -v
+
+# Include LLM tests in a full run
+export RUN_LLM_TESTS=1
+pytest tests/ -v
 ```
 
 ### Test Coverage
