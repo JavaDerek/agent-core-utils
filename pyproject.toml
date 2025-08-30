@@ -1,0 +1,25 @@
+[project]
+name = "agent-core-utils"
+version = "0.1.0"
+description = "Core utility modules for agent projects (calendar, location, etc.)"
+authors = [
+  { name = "Derek Ferguson", email = "derek@example.com" }
+]
+readme = "README.md"
+requires-python = ">=3.10"
+
+dependencies = [
+  "dateparser==1.2.2",
+  "geopy==2.4.1",
+  "langchain-core==0.3.75",
+  "langchain-openai==0.3.32"
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.0",
+  "pytest-cov>=4.1"
+]
+
+[project.urls]
+Homepage = "https://github.com/JavaDerek/agent-core-utils"

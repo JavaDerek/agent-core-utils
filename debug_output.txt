@@ -1,0 +1,20 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.11.11, pytest-8.4.1, pluggy-1.6.0 -- /Users/derekferguson/Agents/agent-core-utils/.venv/bin/python
+cachedir: .pytest_cache
+rootdir: /Users/derekferguson/Agents/agent-core-utils
+configfile: pyproject.toml
+plugins: anyio-4.10.0, langsmith-0.4.21
+collecting ... collected 0 items / 1 error
+
+==================================== ERRORS ====================================
+________________ ERROR collecting tests/test_location_tools.py _________________
+tests/test_location_tools.py:188: in <module>
+    class TestAddressInRegion:
+tests/test_location_tools.py:216: in TestAddressInRegion
+    mock_safe_geocode.return_value = address_coords
+                                     ^^^^^^^^^^^^^^
+E   NameError: name 'address_coords' is not defined
+=========================== short test summary info ============================
+ERROR tests/test_location_tools.py - NameError: name 'address_coords' is not ...
+!!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!
+=============================== 1 error in 0.32s ===============================
