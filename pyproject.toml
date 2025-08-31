@@ -12,7 +12,15 @@ dependencies = [
   "dateparser==1.2.2",
   "geopy==2.4.1",
   "langchain-core==0.3.75",
-  "langchain-openai==0.3.32"
+  "langchain-openai==0.3.32",
+  "redis>=5.0.0",
+  "requests>=2.31.0",
+  "selenium>=4.23.1",
+  "webdriver-manager>=4.0.2",
+  "beautifulsoup4>=4.12.3",
+  "lxml>=5.2.2",
+  "httpx>=0.27.2",
+  "google-search-results>=2.4.2",
 ]
 
 [project.optional-dependencies]
@@ -23,3 +31,13 @@ dev = [
 
 [project.urls]
 Homepage = "https://github.com/JavaDerek/agent-core-utils"
+
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
