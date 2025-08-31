@@ -263,8 +263,10 @@ def test_word_to_int_parameterized(word, expected):
 @pytest.mark.parametrize("expression,base_date,expected_date", [
     ("next july", date(2023, 6, 15), date(2023, 7, 1)),
     ("next january", date(2023, 6, 15), date(2024, 1, 1)),
+    ("next march", date(2023, 6, 15), date(2024, 3, 1)),
     ("last may", date(2023, 6, 15), date(2023, 5, 1)),
     ("last july", date(2023, 6, 15), date(2022, 7, 1)),
+    ("last april", date(2023, 6, 15), date(2023, 4, 1)),
     ("5 days ago", date(2023, 6, 15), date(2023, 6, 10)),
     ("two weeks from now", date(2023, 6, 15), date(2023, 6, 29)),
     ("in 1 month", date(2023, 6, 15), date(2023, 7, 15)),
