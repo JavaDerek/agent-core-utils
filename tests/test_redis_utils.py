@@ -1,6 +1,6 @@
 import os
 import pytest
-import redis_utils
+import agent_core_utils.redis_utils as redis_utils
 
 def test_get_redis_client_returns_redis_instance(monkeypatch):
     monkeypatch.setenv("REDIS_HOST", "localhost")

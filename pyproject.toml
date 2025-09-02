@@ -1,6 +1,6 @@
 [project]
 name = "agent-core-utils"
-version = "0.1.2"
+version = "0.1.3"
 description = "Core utility modules for agent projects (calendar, location, etc.)"
 authors = [
   { name = "Derek Ferguson", email = "derekmferguson@yahoo.co.uk" }
