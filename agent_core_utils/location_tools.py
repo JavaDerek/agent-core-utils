@@ -51,7 +51,7 @@ _LOCATION_PROMPT = (
 
 def _create_geolocator() -> Nominatim:
 	"""Return a ``Nominatim`` geocoder with the required user-agent."""
-	return Nominatim(user_agent="roswell-agent", timeout=10)
+	return Nominatim(user_agent="agent-core-utils", timeout=10)
 
 def _safe_geocode(geolocator: Any, location: str | None) -> tuple[float, float] | None:
 	"""Return ``(lat, lon)`` for ``location`` or ``None`` on failure."""

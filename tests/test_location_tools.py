@@ -17,7 +17,7 @@ mock_get_bounding_box = Mock()
 # Define the location_tools functions directly in the test file to avoid import issues
 def _create_geolocator():
     """Return a ``Nominatim`` geocoder with the required user-agent."""
-    return Nominatim(user_agent="roswell-agent", timeout=10)
+    return Nominatim(user_agent="agent-core-utils", timeout=10)
 
 def _safe_geocode(geolocator: Any, location: str | None):
     """Return ``(lat, lon)`` for ``location`` or ``None`` on failure."""
@@ -53,7 +53,7 @@ class TestCreateGeolocator:
         
         result = _create_geolocator()
         
-        mock_nominatim.assert_called_once_with(user_agent="roswell-agent", timeout=10)
+        mock_nominatim.assert_called_once_with(user_agent="agent-core-utils", timeout=10)
         assert result == mock_instance
     
     def test_returns_nominatim_object(self):
