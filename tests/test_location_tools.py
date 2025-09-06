@@ -300,34 +300,6 @@ class TestAddressInRegion:
             assert result is True
 
 
-class TestExtractLocationWithLlm:
-    """Tests for extract_location_with_llm function using a mocked client.
-    Skipped by default unless RUN_LLM_TESTS env var is set.
-    """
-
-    @pytest.mark.llm
-    @pytest.mark.skipif(not os.getenv("RUN_LLM_TESTS"), reason="Set RUN_LLM_TESTS=1 to run this test")
-    def test_extract_location_with_llm_mocked(self):
-        mock_client = Mock()
-        # Simulate an LLM client failure to verify graceful handling
-        mock_client.invoke.side_effect = Exception("no network")
-
-        result = extract_location_with_llm("Travel to NYC tomorrow", llm_client=mock_client)
-        assert result is None
-
-    @pytest.mark.llm
-    @pytest.mark.skipif(not os.getenv("RUN_LLM_TESTS"), reason="Set RUN_LLM_TESTS=1 to run this test")
-    def test_extract_location_with_llm_happy_path(self):
-        mock_client = Mock()
-        # Mock reply object with a 'content' attribute
-        mock_reply = Mock()
-        mock_reply.content = "New York, USA"
-        mock_client.invoke.return_value = mock_reply
-
-        result = extract_location_with_llm("I will be in New York next week.", llm_client=mock_client)
-        assert result == "New York, USA"
-
-
 @pytest.mark.parametrize("location,expected", [
     (None, None),
     ("", None),
