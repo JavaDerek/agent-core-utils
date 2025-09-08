@@ -26,7 +26,7 @@ This repository contains generic, reusable utilities that:
 ### ❌ What Should NOT Go Here
 - **Business logic** (keep in roswell-shared)
 - **Proprietary algorithms** (keep private)
-- **Band-specific logic** (keep private)
+- **Domain-specific logic** (keep private)
 - **Revenue/profit calculations** (keep private)
 - **Internal workflows** (keep private)
 - **Competitive advantages** (keep private)
@@ -63,7 +63,7 @@ ruff check . --fix
 Before adding code here, ask:
 - [ ] Could a competitor use this against us?
 - [ ] Does this reveal our business processes?
-- [ ] Is this specific to our band/business?
+- [ ] Is this specific to our business domain?
 - [ ] Does this contain any proprietary logic?
 
 **If ANY answer is "yes" → Keep it in roswell-shared (private)**
@@ -86,10 +86,10 @@ class GenericWebScraper:
         pass
 
 # ❌ DOES NOT BELONG - Business Logic
-def calculate_venue_profit_margin():  # → roswell-shared
+def calculate_profit_margin():  # → roswell-shared
     pass
 
-def analyze_band_market_position():   # → roswell-shared  
+def analyze_market_position():   # → roswell-shared  
     pass
 ```
 
