@@ -1,8 +1,7 @@
 """Tests for agent_core_utils.reasoning_tools module."""
 
 import json
-from unittest.mock import Mock, patch
-import pytest
+from unittest.mock import Mock
 from agent_core_utils.reasoning_tools import (
     analyze_text_with_llm,
     analyze_html_with_llm,

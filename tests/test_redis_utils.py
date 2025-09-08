@@ -1,5 +1,3 @@
-import os
-import pytest
 import agent_core_utils.redis_utils as redis_utils
 
 def test_get_redis_client_returns_redis_instance(monkeypatch):

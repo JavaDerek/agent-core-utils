@@ -2,13 +2,12 @@
 
 import pytest
 from unittest.mock import Mock, patch
-import re
-from typing import Any, Optional
-import os
+from typing import Any
 
 # Import the dependencies we need
 from geopy.distance import geodesic
 from geopy.geocoders import Nominatim
+from agent_core_utils.location_tools import address_in_region
 
 # Mock the external dependencies that cause import issues
 mock_initialize_llm_client = Mock()
@@ -38,8 +37,6 @@ def _bounding_box(lat: float, lon: float, radius_miles: float = 25):
     east = geodesic(miles=radius_miles).destination((lat, lon), 90).longitude
     west = geodesic(miles=radius_miles).destination((lat, lon), 270).longitude
     return south, north, west, east
-
-from agent_core_utils.location_tools import address_in_region, extract_location_with_llm
 
 
 class TestCreateGeolocator:
@@ -144,14 +141,7 @@ class TestBoundingBox:
         
         result = _bounding_box(lat, lon, radius)
         
-        # Verify geodesic calls
-        expected_calls = [
-            ((lat, lon), 0),    # North
-            ((lat, lon), 180),  # South  
-            ((lat, lon), 90),   # East
-            ((lat, lon), 270),  # West
-        ]
-        
+        # Verify geodesic was called 4 times (N, S, E, W)
         assert mock_geodesic.call_count == 4
         mock_geodesic.assert_called_with(miles=radius)
         

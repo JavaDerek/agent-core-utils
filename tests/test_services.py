@@ -1,6 +1,5 @@
 """Tests for agent_core_utils.services module."""
 
-import os
 from unittest.mock import Mock, patch
 import pytest
 from agent_core_utils.services import (

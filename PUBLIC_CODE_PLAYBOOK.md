@@ -45,6 +45,20 @@ Only put code HERE if:
 4. ✅ It could help other developers
 5. ✅ It contains zero proprietary information
 
+### 🧹 Code Quality Requirements
+**🚨 CRITICAL: Ruff must be kept clean at ALL TIMES**
+
+- **Zero ruff violations allowed** - CI will break if any exist
+- **Run `ruff check . --fix` before every commit**
+- **Never commit code with ruff warnings or errors**
+- **All team members must maintain ruff cleanliness**
+
+```bash
+# REQUIRED before any commit
+cd /path/to/agent-core-utils
+ruff check . --fix
+```
+
 ### 🔍 Review Checklist
 Before adding code here, ask:
 - [ ] Could a competitor use this against us?
