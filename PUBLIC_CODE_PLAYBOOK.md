@@ -1,5 +1,24 @@
 # 🌐 PUBLIC CODE PLAYBOOK - Agent Core Utils
 
+## 🚀 Quick Reference - Public Utilities Only
+
+### This Repository Contains
+- **Generic utilities** that work across multiple projects
+- **Public helper functions** with no business logic
+- **Open source tools** that could benefit other developers
+
+### What's NOT Here
+- **Private agent code** (kept in separate private repositories)
+- **Business logic** (kept in private shared libraries)
+- **Proprietary algorithms** (kept in private repositories)
+
+### For Private Code Information
+- See individual private repositories' README files
+- Check private shared libraries for proprietary utilities
+- Refer to main project documentation for system overview
+
+---
+
 ## ✅ THIS REPOSITORY IS PUBLIC & OPEN SOURCE
 
 **All code in this repository is public and will be visible to everyone on GitHub.**
@@ -24,7 +43,7 @@ This repository contains generic, reusable utilities that:
 - **Standard error handling patterns**
 
 ### ❌ What Should NOT Go Here
-- **Business logic** (keep in roswell-shared)
+- **Business logic** (keep in private shared libraries)
 - **Proprietary algorithms** (keep private)
 - **Domain-specific logic** (keep private)
 - **Revenue/profit calculations** (keep private)
@@ -36,7 +55,7 @@ This repository contains generic, reusable utilities that:
 Code here can be used as dependencies in GitHub Actions because this repository is public.
 
 ### 🔄 Decision Process
-**DEFAULT CHOICE: Put new code in roswell-shared (private)**
+**DEFAULT CHOICE: Put new code in private shared libraries**
 
 Only put code HERE if:
 1. ✅ **You explicitly decide it should be public**
@@ -66,7 +85,7 @@ Before adding code here, ask:
 - [ ] Is this specific to our business domain?
 - [ ] Does this contain any proprietary logic?
 
-**If ANY answer is "yes" → Keep it in roswell-shared (private)**
+**If ANY answer is "yes" → Keep it in private shared libraries**
 
 ### 📝 Examples of Public Code
 ```python
@@ -86,18 +105,18 @@ class GenericWebScraper:
         pass
 
 # ❌ DOES NOT BELONG - Business Logic
-def calculate_profit_margin():  # → roswell-shared
+def calculate_profit_margin():  # → private libraries
     pass
 
-def analyze_market_position():   # → roswell-shared  
+def analyze_market_position():   # → private libraries  
     pass
 ```
 
 ### 🚨 Security Reminders
 - **Never commit API keys, passwords, or secrets**
 - **Assume anyone can read this code**
-- **Keep all business logic in roswell-shared**
+- **Keep all business logic in private libraries**
 - **When in doubt, keep it private**
 
 ---
-**Remember: Default to private (roswell-shared). Only make public when explicitly beneficial and safe.**
+**Remember: Default to private libraries. Only make public when explicitly beneficial and safe.**
