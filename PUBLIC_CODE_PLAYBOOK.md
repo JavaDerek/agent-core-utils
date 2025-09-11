@@ -1,6 +1,25 @@
 # 🌐 PUBLIC CODE PLAYBOOK - Agent Core Utils
 
-## 🚀 Quick Reference - Public Utilities Only
+## � CRITICAL: CODE QUALITY REQUIREMENTS
+
+### 🧹 Ruff Linting - MANDATORY
+**🚨 ZERO ruff violations allowed. Must be run after EVERY code change.**
+
+```bash
+# REQUIRED after every code change
+cd /path/to/agent-core-utils
+ruff check . --fix
+```
+
+**Rules:**
+- **Run `ruff check . --fix` after every code change**
+- **Never commit code with ruff warnings or errors**
+- **CI will fail if any ruff violations exist**
+- **All team members must maintain ruff cleanliness**
+
+---
+
+## �🚀 Quick Reference - Public Utilities Only
 
 ### This Repository Contains
 - **Generic utilities** that work across multiple projects
