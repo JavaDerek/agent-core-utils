@@ -29,6 +29,7 @@ dependencies = [
   "geopy==2.4.1",
   "langchain-core==0.3.75",
   "langchain-openai==0.3.32",
+  "pydantic>=2.0.0",
   "redis>=5.0.0",
   "requests>=2.31.0",
   "selenium>=4.23.1",
@@ -42,6 +43,7 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
   "pytest>=8.0",
+  "pytest-asyncio>=0.21.0",
   "pytest-cov>=4.1"
 ]
 

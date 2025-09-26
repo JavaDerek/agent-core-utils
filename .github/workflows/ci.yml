@@ -35,4 +35,4 @@ jobs:
         env:
           RUN_LLM_TESTS: '1'
         run: |
-          pytest -q
+          python -m pytest --asyncio-mode=auto -q
