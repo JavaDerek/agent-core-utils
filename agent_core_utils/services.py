@@ -1,3 +1,4 @@
+import logging
 import os
 from pathlib import Path
 
@@ -7,6 +8,8 @@ from langchain_openai import ChatOpenAI
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service as ChromeService
 from webdriver_manager.chrome import ChromeDriverManager
+
+logger = logging.getLogger(__name__)
 
 _redis_client: redis.Redis | None = None
 
@@ -60,37 +63,82 @@ def get_redis_url() -> str | None:
     return f"redis://{auth}{host}:{port}/{db}"
 
 
+def _import_langfuse_handler(public_key: str, secret_key: str, host: str):
+    """Import and create a Langfuse CallbackHandler.
+
+    Separated for testability — callers can mock this to simulate ImportError.
+    """
+    from langfuse.callback import CallbackHandler  # type: ignore
+
+    return CallbackHandler(
+        public_key=public_key,
+        secret_key=secret_key,
+        host=host,
+    )
+
+
+def _get_langfuse_callbacks() -> list:
+    """Return Langfuse LangChain callbacks if env vars are configured.
+
+    Reads LANGFUSE_PUBLIC_KEY, LANGFUSE_SECRET_KEY, and LANGFUSE_HOST from
+    environment.  Returns ``[CallbackHandler(...)]`` when both keys are
+    present, or ``[]`` otherwise.  Gracefully degrades if the ``langfuse``
+    package is not installed.
+    """
+    public_key = os.environ.get("LANGFUSE_PUBLIC_KEY")
+    secret_key = os.environ.get("LANGFUSE_SECRET_KEY")
+    if not public_key or not secret_key:
+        return []
+
+    host = os.environ.get("LANGFUSE_HOST", "https://cloud.langfuse.com")
+    try:
+        handler = _import_langfuse_handler(public_key, secret_key, host)
+        logger.info("Langfuse LangChain callbacks enabled (host=%s)", host)
+        return [handler]
+    except ImportError:
+        logger.warning("langfuse package not installed — LLM callbacks disabled")
+        return []
+    except Exception:
+        logger.exception("Failed to create Langfuse callback handler")
+        return []
+
+
 def initialize_llm_client() -> ChatOpenAI:
     """
     Initialize and return a reusable ChatOpenAI client based on environment configuration.
-    
+
     Environment variables used:
     - LLM_MODEL: Model name (default: "llama3.1:8b")
     - LLM_BASE_URL: Base URL for the LLM service
     - LLM_API_KEY: API key for authentication (default: "ollama")
     - LLM_TEMPERATURE: Temperature setting (default: 0.1)
     - LLM_DISABLE_TEMPERATURE: Set to "1", "true", or "yes" to disable temperature
+    - LANGFUSE_PUBLIC_KEY / LANGFUSE_SECRET_KEY: Auto-wire Langfuse tracing callbacks
     """
-    print("--- Initializing LLM Client ---")
-    
+    logger.info("Initializing LLM client")
+
     # Get configuration from environment with sensible defaults
     model = os.environ.get("LLM_MODEL", "llama3.1:8b")
     base_url = os.environ.get("LLM_BASE_URL")
     api_key = os.environ.get("LLM_API_KEY", "ollama")
-    
+
     # Handle temperature configuration
     disable_temp = os.environ.get("LLM_DISABLE_TEMPERATURE", "").lower() in {"1", "true", "yes"}
     temperature = os.environ.get("LLM_TEMPERATURE", "0.1")
-    
+
     kwargs = {
         "model": model,
         "base_url": base_url,
         "api_key": api_key,
     }
-    
+
     if not disable_temp:
         kwargs["temperature"] = float(temperature)
-    
+
+    callbacks = _get_langfuse_callbacks()
+    if callbacks:
+        kwargs["callbacks"] = callbacks
+
     return ChatOpenAI(**kwargs)
 
 
@@ -101,7 +149,7 @@ def initialize_browser_driver():
     Returns a Chrome WebDriver in headless mode with optimized settings for automation.
     Falls back to a dummy driver that uses requests if Chrome setup fails.
     """
-    print("--- Initializing Headless Browser Driver ---")
+    logger.info("Initializing headless browser driver")
 
     # Chrome Options - configure browser behavior
     options = webdriver.ChromeOptions()

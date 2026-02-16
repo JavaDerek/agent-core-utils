@@ -30,13 +30,16 @@ class TestInitializeLLMClient:
         monkeypatch.delenv("LLM_API_KEY", raising=False)
         monkeypatch.delenv("LLM_TEMPERATURE", raising=False)
         monkeypatch.delenv("LLM_DISABLE_TEMPERATURE", raising=False)
-        
+        monkeypatch.delenv("LANGFUSE_PUBLIC_KEY", raising=False)
+        monkeypatch.delenv("LANGFUSE_SECRET_KEY", raising=False)
+        monkeypatch.delenv("LANGFUSE_HOST", raising=False)
+
         with patch("agent_core_utils.services.ChatOpenAI") as mock_openai:
             mock_client = Mock()
             mock_openai.return_value = mock_client
-            
+
             result = initialize_llm_client()
-            
+
             assert result == mock_client
             mock_openai.assert_called_once_with(
                 model="llama3.1:8b",
@@ -51,13 +54,15 @@ class TestInitializeLLMClient:
         monkeypatch.setenv("LLM_BASE_URL", "http://localhost:11434")
         monkeypatch.setenv("LLM_API_KEY", "custom-key")
         monkeypatch.setenv("LLM_TEMPERATURE", "0.7")
-        
+        monkeypatch.delenv("LANGFUSE_PUBLIC_KEY", raising=False)
+        monkeypatch.delenv("LANGFUSE_SECRET_KEY", raising=False)
+
         with patch("agent_core_utils.services.ChatOpenAI") as mock_openai:
             mock_client = Mock()
             mock_openai.return_value = mock_client
-            
+
             result = initialize_llm_client()
-            
+
             assert result == mock_client
             mock_openai.assert_called_once_with(
                 model="custom-model",
@@ -69,13 +74,15 @@ class TestInitializeLLMClient:
     def test_initialize_llm_client_disabled_temperature(self, monkeypatch):
         """Test LLM client initialization with temperature disabled."""
         monkeypatch.setenv("LLM_DISABLE_TEMPERATURE", "true")
-        
+        monkeypatch.delenv("LANGFUSE_PUBLIC_KEY", raising=False)
+        monkeypatch.delenv("LANGFUSE_SECRET_KEY", raising=False)
+
         with patch("agent_core_utils.services.ChatOpenAI") as mock_openai:
             mock_client = Mock()
             mock_openai.return_value = mock_client
-            
+
             result = initialize_llm_client()
-            
+
             assert result == mock_client
             # Should not include temperature when disabled
             expected_kwargs = {
@@ -84,6 +91,105 @@ class TestInitializeLLMClient:
                 "api_key": "ollama",
             }
             mock_openai.assert_called_once_with(**expected_kwargs)
+
+    def test_initialize_llm_client_with_langfuse(self, monkeypatch):
+        """Test LLM client includes Langfuse callbacks when env vars are set."""
+        monkeypatch.delenv("LLM_MODEL", raising=False)
+        monkeypatch.delenv("LLM_BASE_URL", raising=False)
+        monkeypatch.delenv("LLM_API_KEY", raising=False)
+        monkeypatch.delenv("LLM_TEMPERATURE", raising=False)
+        monkeypatch.delenv("LLM_DISABLE_TEMPERATURE", raising=False)
+        monkeypatch.setenv("LANGFUSE_PUBLIC_KEY", "pk-test-123")
+        monkeypatch.setenv("LANGFUSE_SECRET_KEY", "sk-test-456")
+        monkeypatch.setenv("LANGFUSE_HOST", "https://langfuse.example.com")
+
+        mock_handler = Mock()
+        with (
+            patch("agent_core_utils.services.ChatOpenAI") as mock_openai,
+            patch("agent_core_utils.services._get_langfuse_callbacks", return_value=[mock_handler]),
+        ):
+            mock_client = Mock()
+            mock_openai.return_value = mock_client
+
+            result = initialize_llm_client()
+
+            assert result == mock_client
+            mock_openai.assert_called_once_with(
+                model="llama3.1:8b",
+                base_url=None,
+                api_key="ollama",
+                temperature=0.1,
+                callbacks=[mock_handler],
+            )
+
+    def test_initialize_llm_client_langfuse_import_error(self, monkeypatch):
+        """Test graceful degradation when langfuse package is not installed."""
+        monkeypatch.delenv("LLM_MODEL", raising=False)
+        monkeypatch.delenv("LLM_BASE_URL", raising=False)
+        monkeypatch.delenv("LLM_API_KEY", raising=False)
+        monkeypatch.delenv("LLM_TEMPERATURE", raising=False)
+        monkeypatch.delenv("LLM_DISABLE_TEMPERATURE", raising=False)
+        monkeypatch.setenv("LANGFUSE_PUBLIC_KEY", "pk-test-123")
+        monkeypatch.setenv("LANGFUSE_SECRET_KEY", "sk-test-456")
+
+        with (
+            patch("agent_core_utils.services.ChatOpenAI") as mock_openai,
+            patch("agent_core_utils.services._get_langfuse_callbacks", return_value=[]),
+        ):
+            mock_client = Mock()
+            mock_openai.return_value = mock_client
+
+            result = initialize_llm_client()
+
+            assert result == mock_client
+            # No callbacks key when list is empty
+            mock_openai.assert_called_once_with(
+                model="llama3.1:8b",
+                base_url=None,
+                api_key="ollama",
+                temperature=0.1,
+            )
+
+
+class TestGetLangfuseCallbacks:
+    """Tests for _get_langfuse_callbacks helper."""
+
+    def test_returns_handler_when_env_vars_set(self, monkeypatch):
+        """Returns a list with one CallbackHandler when Langfuse env vars are present."""
+        from agent_core_utils.services import _get_langfuse_callbacks
+
+        monkeypatch.setenv("LANGFUSE_PUBLIC_KEY", "pk-test")
+        monkeypatch.setenv("LANGFUSE_SECRET_KEY", "sk-test")
+        monkeypatch.setenv("LANGFUSE_HOST", "https://langfuse.example.com")
+
+        mock_handler = Mock()
+        with patch("agent_core_utils.services._import_langfuse_handler") as mock_import:
+            mock_import.return_value = mock_handler
+            result = _get_langfuse_callbacks()
+
+        assert result == [mock_handler]
+
+    def test_returns_empty_when_no_keys(self, monkeypatch):
+        """Returns empty list when Langfuse env vars are missing."""
+        from agent_core_utils.services import _get_langfuse_callbacks
+
+        monkeypatch.delenv("LANGFUSE_PUBLIC_KEY", raising=False)
+        monkeypatch.delenv("LANGFUSE_SECRET_KEY", raising=False)
+
+        result = _get_langfuse_callbacks()
+        assert result == []
+
+    def test_returns_empty_on_import_error(self, monkeypatch):
+        """Returns empty list when langfuse package is not installed."""
+        from agent_core_utils.services import _get_langfuse_callbacks
+
+        monkeypatch.setenv("LANGFUSE_PUBLIC_KEY", "pk-test")
+        monkeypatch.setenv("LANGFUSE_SECRET_KEY", "sk-test")
+
+        with patch("agent_core_utils.services._import_langfuse_handler", side_effect=ImportError("no langfuse")):
+            result = _get_langfuse_callbacks()
+
+        assert result == []
 
 
 class TestInitializeBrowserDriver:
