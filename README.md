@@ -1,100 +1,6 @@
 # agent-core-utils
 
-All the tools shared between agents
-
-## Overview
-
-This repository contains utility modules for agents, providing essential functionality for date/time processing and location handling. The modules are designed to be reusable across different agent implementations.
-
-## Modules
-
-### calendar_tools.py
-
-The `calendar_tools` module provides utilities for parsing and resolving relative date expressions into absolute dates.
-
-#### Key Functions
-
-- **`get_current_date()`** - Returns today's date as a `date` object
-- **`parse_relative_date(expression, *, base=None)`** - Parses relative date expressions into absolute dates
-- **`resolve_relative_dates(text, *, base=None)`** - Replaces relative date phrases in text with ISO date strings  
-- **`_word_to_int(word)`** - Converts word numbers (e.g., "five") and digit strings to integers
-
-#### Usage Examples
-
-```python
-from calendar_tools import get_current_date, parse_relative_date, resolve_relative_dates
-
-# Get current date
-today = get_current_date()
-print(today)  # 2023-06-15
-
-# Parse relative dates
-base_date = date(2023, 6, 15)
-next_month = parse_relative_date("next july", base=base_date)
-print(next_month)  # 2023-07-01
-
-ago_date = parse_relative_date("5 days ago", base=base_date) 
-print(ago_date)  # 2023-06-10
-
-future_date = parse_relative_date("in two weeks", base=base_date)
-print(future_date)  # 2023-06-29
-
-# Resolve dates in text
-text = "The meeting is next july and the report was due 3 days ago."
-resolved = resolve_relative_dates(text, base=base_date)
-print(resolved)  # "The meeting is 2023-07-01 and the report was due 2023-06-12."
-```
-
-#### Supported Date Expressions
-
-- **Next/Last Month**: "next july", "last december"
-- **Relative Time**: "in 5 days", "2 weeks from now", "3 months ago"  
-- **Word Numbers**: "five days ago", "two weeks from now"
-- **Flexible Units**: supports days, weeks, months, years (singular/plural)
-
-### location_tools.py
-
-The `location_tools` module provides utilities for geocoding addresses, calculating bounding boxes, and determining if addresses fall within geographic regions.
-
-#### Key Functions
-
-- **`_create_geolocator()`** - Creates a Nominatim geocoder instance with proper user agent
-- **`_safe_geocode(geolocator, location)`** - Safely geocodes a location string, returning (lat, lon) or None
-- **`_bounding_box(lat, lon, radius_miles=25)`** - Calculates bounding box around coordinates
-- **`address_in_region(address, region, *, geolocator=None)`** - Checks if address is within a geographic region
-- **`extract_location_with_llm(text, *, llm_client=None)`** - Extracts location from text using LLM (requires OpenAI client)
-
-#### Usage Examples
-
-```python
-from location_tools import _create_geolocator, _safe_geocode, _bounding_box, address_in_region
-
-# Create a geocoder
-geolocator = _create_geolocator()
-
-# Geocode an address  
-coords = _safe_geocode(geolocator, "New York, NY")
-print(coords)  # (40.7128, -74.0060)
-
-# Calculate bounding box around coordinates
-bbox = _bounding_box(40.7128, -74.0060, radius_miles=25)
-print(bbox)  # (south, north, west, east)
-
-# Check if address is in region
-is_in_region = address_in_region("Central Park, NYC", "New York", geolocator=geolocator)
-print(is_in_region)  # True
-
-# Safe geocoding handles errors gracefully
-coords = _safe_geocode(geolocator, "Invalid Location XYZ")
-print(coords)  # None
-```
-
-#### Features
-
-- **Error Handling**: All functions gracefully handle network errors and invalid inputs
-- **Dual Fallback**: Uses Google Places API when available, falls back to geocoding + bounding box calculation
-- **Configurable Radius**: Bounding box calculations support custom radius in miles
-- **LLM Integration**: Can extract locations from natural language text using OpenAI models
+Shared utility library for agent applications, providing LLM initialization, Redis clients, location tools, browser automation, reasoning utilities, and inter-agent communication via Redis Streams.
 
 ## Installation
 
@@ -107,78 +13,170 @@ pip install .
 For development/editable install:
 
 ```sh
-pip install -e .
+pip install -e ".[dev]"
 ```
 
-## Usage
+## Modules
 
-Import utilities in your agent project:
+### services.py
+
+Factory functions for initializing shared infrastructure components.
+
+- **`initialize_llm_client()`** - Returns a `ChatOpenAI` client configured from environment variables (`LLM_MODEL`, `LLM_BASE_URL`, `LLM_API_KEY`, `LLM_TEMPERATURE`, `LLM_DISABLE_TEMPERATURE`). Automatically wires Langfuse tracing callbacks when `LANGFUSE_PUBLIC_KEY` and `LANGFUSE_SECRET_KEY` are set.
+- **`initialize_browser_driver()`** - Returns a headless Chrome WebDriver, falling back to a `DummyDriver` (requests-based) if Chrome is unavailable.
+- **`get_redis_client()`** - Returns a singleton async Redis client configured from `REDIS_HOST`, `REDIS_PORT`, `REDIS_DB`, `REDIS_USERNAME`, `REDIS_PASSWORD`.
+- **`get_redis_url()`** - Builds a Redis connection URL from environment variables, or returns `REDIS_URL` directly if set.
 
 ```python
-from agent_core_utils.calendar_tools import get_current_date
-from agent_core_utils.location_tools import extract_location_with_llm
+from agent_core_utils.services import initialize_llm_client, get_redis_client
+
+llm = initialize_llm_client()
+redis = get_redis_client()
 ```
+
+### redis_utils.py
+
+Standalone Redis client factories (sync and async) for agents that need direct Redis access without the singleton pattern.
+
+- **`get_redis_client()`** - Returns a synchronous `redis.Redis` client.
+- **`get_async_redis_client()`** - Returns an async `redis.asyncio.Redis` client.
+
+Both read from the same environment variables (`REDIS_HOST`, `REDIS_PORT`, `REDIS_DB`, `REDIS_USERNAME`, `REDIS_PASSWORD`).
+
+### location_tools.py
+
+Geocoding, bounding box calculations, and geographic region containment.
+
+- **`address_in_region(address, region, *, geolocator=None)`** - Checks if an address falls within a geographic region using bounding boxes. Tries Google Places API first, falls back to Nominatim geocoding.
+- **`extract_location_with_llm(text, *, llm_client=None)`** - Extracts a location string from natural language text using an LLM.
+- **`_create_geolocator()`** - Creates a Nominatim geocoder instance.
+- **`_safe_geocode(geolocator, location)`** - Safely geocodes a location, returning `(lat, lon)` or `None`.
+- **`_bounding_box(lat, lon, radius_miles=25)`** - Calculates a `(south, north, west, east)` bounding box.
+
+```python
+from agent_core_utils.location_tools import address_in_region, extract_location_with_llm
+
+in_region = address_in_region("Central Park, NYC", "New York")
+location = extract_location_with_llm("Find coffee shops near downtown Seattle")
+```
+
+### reasoning_tools.py
+
+LLM-based text analysis and structured data extraction.
+
+- **`analyze_text_with_llm(llm_client, text_to_analyze, question)`** - Sends text to an LLM with a question prompt. Strips markdown code fences from JSON responses.
+- **`analyze_html_with_llm(llm_client, html_text, prompt)`** - Convenience wrapper for analyzing HTML content.
+- **`extract_structured_data_with_llm(llm_client, text, prompt, model_class=None)`** - Extracts JSON data from text, optionally validating against a Pydantic model.
+
+```python
+from agent_core_utils.reasoning_tools import extract_structured_data_with_llm
+from agent_core_utils.services import initialize_llm_client
+
+llm = initialize_llm_client()
+data = extract_structured_data_with_llm(llm, page_text, "Extract the venue name and address as JSON.")
+```
+
+### Agent Communication Framework
+
+A Redis Streams-based system for inter-agent task delegation and response handling.
+
+#### protocols.py
+
+Pydantic models defining the communication contract:
+
+- **`DelegationTask`** - Task structure with priority, timeline, success metrics, effort/impact estimates, and deadlines.
+- **`TaskResponse`** - Response with status (`acknowledged`, `in_progress`, `completed`, `failed`), results, errors, and retry info.
+- **`TaskError`** - Structured error with error code, message, and retry guidance.
+- **`TaskProgress`** - Progress tracking with step counts and estimated completion.
+
+#### config.py
+
+- **`CommunicationConfig`** - Pydantic model for Redis connection settings, stream names, timeouts, retry parameters, and cleanup intervals.
+
+#### redis_streams.py
+
+- **`RedisStreamManager`** - Low-level Redis Streams operations: `send_message()`, `read_messages()`, `create_consumer_group()`, `read_consumer_group()`, `ack_message()`, `get_stream_info()`, `trim_stream()`. Handles serialization/deserialization and retry logic.
+
+#### delegation.py
+
+- **`AgentDelegator`** - Manages task delegation: sends tasks to target agents via Redis Streams, tracks active tasks, listens for responses, handles timeouts and cancellation.
+- **`AgentDelegate`** - Receives and processes delegated tasks: registers task handlers by type, sends acknowledgments/progress/completion/failure responses, persists state across restarts.
+
+#### state_persistence.py
+
+- **`AgentStateManager`** - Redis-backed persistence for agent state: active tasks, stream read positions, and agent metadata. Survives agent restarts.
+
+### browser.py
+
+Convenience module that re-exports `initialize_browser_driver()` as `initialize_driver()`.
+
+### llm.py
+
+Compatibility shim so that `from agent_core_utils.llm import initialize_llm_client` continues to work. Forwards to `services.initialize_llm_client()`, with a dummy fallback if dependencies are missing.
 
 ## Project Structure
 
-- `agent_core_utils/` — Main package directory
-- `tests/` — Unit tests
+```
+agent_core_utils/
+  __init__.py          # Package exports
+  services.py          # LLM, browser, Redis factory functions
+  redis_utils.py       # Sync/async Redis client factories
+  location_tools.py    # Geocoding and region containment
+  reasoning_tools.py   # LLM text analysis and extraction
+  protocols.py         # Pydantic communication models
+  config.py            # CommunicationConfig model
+  redis_streams.py     # Redis Streams wrapper
+  delegation.py        # AgentDelegator / AgentDelegate
+  state_persistence.py # Redis-backed state management
+  browser.py           # Browser driver convenience wrapper
+  llm.py               # Legacy import compatibility shim
+  google_places.py     # Google Places bounding box (stub)
+  tools/               # Compatibility shims for legacy imports
+tests/
+  conftest.py
+  test_services.py
+  test_location_tools.py
+  test_reasoning_tools.py
+  test_delegation.py
+  test_agent_delegate.py
+  test_protocols.py
+  test_config.py
+  test_redis_streams.py
+  test_redis_utils.py
+  test_state_persistence.py
+  test_integration.py
+  test_calendar_tools.py
+```
 
 ## Requirements
 
-- Python 3.7+
-- See `pyproject.toml` for dependencies
+- Python >= 3.10
+- See `pyproject.toml` for full dependency list
+
+Key dependencies: `langchain-openai`, `langchain-core`, `pydantic >= 2.0`, `redis >= 5.0`, `selenium`, `geopy`, `httpx`, `beautifulsoup4`
 
 ## Testing
 
-Comprehensive test suites are provided for both modules:
-
-### Running Tests
+249 tests covering services, location tools, reasoning tools, delegation, protocols, configuration, Redis streams, state persistence, and integration scenarios.
 
 ```bash
 # Run all tests
 pytest tests/ -v
 
-# Run specific module tests
-pytest tests/test_calendar_tools.py -v
-pytest tests/test_location_tools.py -v
-
 # Run with coverage
-pytest tests/ --cov=. --cov-report=html
+pytest tests/ --cov=agent_core_utils --cov-report=html
 
-# Run only LLM-marked tests (requires env flag)
-export RUN_LLM_TESTS=1
-pytest -m llm -v
-
-# Include LLM tests in a full run
-export RUN_LLM_TESTS=1
-pytest tests/ -v
+# Run a specific test file
+pytest tests/test_delegation.py -v
 ```
 
-### Test Coverage
-
-- **calendar_tools**: 51 tests covering all functions, edge cases, and parameterized scenarios
-- **location_tools**: 34 tests with mocked external dependencies and boundary condition testing
-- **Features tested**: Error handling, boundary conditions, parameter validation, mocking external APIs
-
-### Test Structure
-
-Tests follow pytest conventions with:
-- Class-based organization for related test groups
-- Descriptive test names following `test_<functionality>_<scenario>` pattern
-- Parameterized tests for comprehensive input validation
-- Proper mocking of external dependencies (geocoding APIs, LLM clients)
-- Skip markers for tests requiring external services
+All external dependencies are mocked -- tests run without Redis, network, or LLM access. Async tests use `pytest-asyncio`.
 
 ## Development
 
-When adding new functionality:
-
-1. Follow existing code patterns and documentation styles
-2. Add comprehensive tests with both positive and negative test cases
-3. Use appropriate mocking for external dependencies
-4. Update this README with new function documentation and examples
-5. Ensure all tests pass before submitting changes
+- Run `ruff check . --fix` after every code change
+- All external deps must be mocked in tests
+- This is a shared library -- be conservative with breaking changes to public APIs
 
 ## License
 

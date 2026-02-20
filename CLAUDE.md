@@ -38,5 +38,17 @@ Shared utility library providing LLM initialization, Redis clients, location too
 - `llm` marker for tests that require LLM mocking
 - Run: `pytest tests/ -v`
 
+## Public Repository
+This repository is **public on GitHub**. All code is visible to everyone. Before adding code here:
+- It must be completely generic with no business logic or competitive advantages
+- It must contain no proprietary algorithms or domain-specific logic
+- It must contain no API keys, passwords, or secrets
+- Default choice for new code is private shared libraries -- only put code here if it's explicitly intended to be public
+- When in doubt, keep it private
+
+## Code Quality
+- Run `ruff check . --fix` after every code change -- zero violations allowed
+- CI will fail if any ruff violations exist
+
 ## Important
 This is a library, not a standalone service. Changes here affect all downstream consumers. Be conservative with breaking changes to public APIs.
