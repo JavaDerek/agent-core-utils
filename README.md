@@ -47,7 +47,7 @@ Both read from the same environment variables (`REDIS_HOST`, `REDIS_PORT`, `REDI
 
 Geocoding, bounding box calculations, and geographic region containment.
 
-- **`address_in_region(address, region, *, geolocator=None)`** - Checks if an address falls within a geographic region using bounding boxes. Tries Google Places API first, falls back to Nominatim geocoding.
+- **`address_in_region(address, region, *, geolocator=None)`** - Checks if an address falls within a geographic region using bounding boxes. Falls back to Nominatim geocoding.
 - **`extract_location_with_llm(text, *, llm_client=None)`** - Extracts a location string from natural language text using an LLM.
 - **`_create_geolocator()`** - Creates a Nominatim geocoder instance.
 - **`_safe_geocode(geolocator, location)`** - Safely geocodes a location, returning `(lat, lon)` or `None`.
@@ -114,6 +114,10 @@ Convenience module that re-exports `initialize_browser_driver()` as `initialize_
 
 Compatibility shim so that `from agent_core_utils.llm import initialize_llm_client` continues to work. Forwards to `services.initialize_llm_client()`, with a dummy fallback if dependencies are missing.
 
+### calendar_tools.py
+
+Standalone module (at the repo root, not inside the package) providing date parsing and calendar utilities. Converts natural language date expressions (e.g., "next Friday", "in two weeks") to Python `date` objects using `dateparser`.
+
 ## Project Structure
 
 ```
@@ -132,6 +136,7 @@ agent_core_utils/
   llm.py               # Legacy import compatibility shim
   google_places.py     # Google Places bounding box (stub)
   tools/               # Compatibility shims for legacy imports
+calendar_tools.py      # Standalone date parsing utilities
 tests/
   conftest.py
   test_services.py
@@ -153,11 +158,11 @@ tests/
 - Python >= 3.10
 - See `pyproject.toml` for full dependency list
 
-Key dependencies: `langchain-openai`, `langchain-core`, `pydantic >= 2.0`, `redis >= 5.0`, `selenium`, `geopy`, `httpx`, `beautifulsoup4`
+Key dependencies: `langchain-openai`, `langchain-core`, `pydantic >= 2.0`, `redis >= 5.0`, `selenium`, `webdriver-manager`, `geopy`, `httpx`, `beautifulsoup4`, `dateparser`, `lxml`, `google-search-results`
 
 ## Testing
 
-249 tests covering services, location tools, reasoning tools, delegation, protocols, configuration, Redis streams, state persistence, and integration scenarios.
+249 tests covering services, location tools, reasoning tools, delegation, protocols, configuration, Redis streams, state persistence, calendar tools, and integration scenarios.
 
 ```bash
 # Run all tests
